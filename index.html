@@ -1,17 +1,179 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <title>我的第一张网页</title>
+  <meta charset="UTF-8">
+  <title>三棵树全屋定制 | 让家回归自然</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- 图标：用官方 logo 或自己换 -->
+  <link rel="icon" href="https://www.skk.com.cn/favicon.ico">
+  <!-- 字体 & 图标 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
   <style>
-    body{background:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;text-align:center;padding-top:20vh;}
-    h1{color:#2c3e50;}
-    img{width:240px;border-radius:50%;box-shadow:0 10px 30px rgba(0,0,0,.15);}
+    :root{
+      --primary:#3CB371;
+      --primary-dark:#2e9e63;
+      --grey:#f5f7fa;
+      --text:#333;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Noto Sans SC',sans-serif;}
+    body{color:var(--text);}
+    img{max-width:100%;display:block;}
+    a{text-decoration:none;color:inherit;}
+    /* 导航 */
+    header{
+      position:sticky;top:0;z-index:9;
+      background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.05);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.6rem 1rem;
+    }
+    header .logo{
+      display:flex;align-items:center;font-weight:700;font-size:1.2rem;color:var(--primary);
+    }
+    header .logo img{height:32px;margin-right:8px;}
+    header nav a{margin-left:1.2rem;font-size:.9rem;transition:.2s;}
+    header nav a:hover{color:var(--primary);}
+    /* 主横幅 */
+    .hero{
+      background:url("https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1350&q=80") center/cover no-repeat;
+      height:70vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;
+      position:relative;
+    }
+    .hero::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45);}
+    .hero>div{position:relative;z-index:1;}
+    .hero h1{font-size:2.4rem;margin-bottom:.6rem;}
+    .hero p{font-size:1.1rem;margin-bottom:1.2rem;}
+    .btn{
+      display:inline-block;background:var(--primary);color:#fff;
+      padding:.6rem 1.6rem;border-radius:4px;font-weight:500;transition:.2s;
+    }
+    .btn:hover{background:var(--primary-dark);}
+    /* 服务亮点 */
+    .section{padding:3rem 1rem;max-width:1100px;margin:auto;text-align:center;}
+    .section h2{font-size:1.8rem;margin-bottom:2rem;position:relative;}
+    .section h2::after{
+      content:'';width:60px;height:3px;background:var(--primary);
+      position:absolute;left:50%;transform:translateX(-50%);bottom:-8px;
+    }
+    .grid{
+      display:grid;gap:1.2rem;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    }
+    .card{background:#fff;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.06);padding:1.4rem;text-align:center;}
+    .card i{font-size:2.2rem;color:var(--primary);margin-bottom:.6rem;}
+    /* 案例 */
+    .case-item img{border-radius:6px;margin-bottom:.6rem;}
+    /* 关于我们 */
+    #about{background:var(--grey);}
+    /* 底部 */
+    footer{background:#222;color:#ddd;font-size:.85rem;padding:2rem 1rem;text-align:center;}
+    footer h3{font-size:1.1rem;margin-bottom:.6rem;color:var(--primary);}
+    footer img{width:120px;margin:.6rem auto;}
+    /* 响应式 */
+    @media(max-width:600px){
+      header nav{display:none;} /* 极简隐藏导航，可再加汉堡菜单 */
+      .hero h1{font-size:1.8rem;}
+    }
   </style>
 </head>
 <body>
-  <img src="https://github.com/{你的GitHub用户名}.png" alt="头像">
-  <h1>你好，世界！</h1>
-  <p>这是我用 GitHub Pages 搭建的第一个页面。</p>
+  <!-- 头部 -->
+  <header>
+    <div class="logo">
+      <!-- 换成你自己的 logo -->
+      <img src="https://www.skk.com.cn/static/assets/img/logo.png" alt="logo">
+      三棵树全屋定制
+    </div>
+    <nav>
+      <a href="#service">服务亮点</a>
+      <a href="#case">实景案例</a>
+      <a href="#about">品牌故事</a>
+      <a href="#contact">联系我们</a>
+    </nav>
+  </header>
+
+  <!-- 主视觉 -->
+  <section class="hero">
+    <div>
+      <h1>让家回归自然</h1>
+      <p>环保板材 · 个性设计 · 一站式全屋配齐</p>
+      <a class="btn" href="#contact">预约免费设计</a>
+    </div>
+  </section>
+
+  <!-- 服务亮点 -->
+  <section id="service" class="section">
+    <h2>六大核心优势</h2>
+    <div class="grid">
+      <div class="card">
+        <i class="ri-tree-line"></i>
+        <h3>健康环保</h3>
+        <p>E0级板材，甲醛释放量≤0.05mg/m³，即装即住</p>
+      </div>
+      <div class="card">
+        <i class="ri-draft-line"></i>
+        <h3>免费量房设计</h3>
+        <p>资深设计师1对1，48小时出3D效果图</p>
+      </div>
+      <div class="card">
+        <i class="ri-time-line"></i>
+        <h3>30天极速交付</h3>
+        <p>智能生产线＋自营安装团队，工期缩短一半</p>
+      </div>
+      <div class="card">
+        <i class="ri-shield-check-line"></i>
+        <h3>十年质保</h3>
+        <p>柜体/五金终身维护，全国800+服务网点</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 实景案例 -->
+  <section id="case" class="section">
+    <h2>实景案例</h2>
+    <div class="grid">
+      <!-- 每张图 1:1 正方形，直接换 src -->
+      <div class="case-item">
+        <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80" alt="客厅">
+        <h3>现代简约客厅</h3>
+        <p>投影幕布＋整墙收纳柜，收纳提升30%</p>
+      </div>
+      <div class="case-item">
+        <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80" alt="餐厨">
+        <h3>开放式餐厨</h3>
+        <p>中岛台＋隐藏式餐桌，家庭互动核心区</p>
+      </div>
+      <div class="case-item">
+        <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80" alt="主卧">
+        <h3>主卧衣帽间</h3>
+        <p>L型步入式衣柜，男女分区收纳</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 品牌故事 -->
+  <section id="about" class="section">
+    <h2>品牌故事</h2>
+    <p style="max-width:700px;margin:auto;line-height:1.8;">
+      三棵树全屋定制，传承三棵树“健康、自然、绿色”的品牌基因，
+      将环保板材与潮流设计深度融合，为千万家庭提供一站式整家解决方案。
+      从一颗树到一个家，我们坚持让产品更贴近自然，让居住回归健康。
+    </p>
+  </section>
+
+  <!-- 联系我们 -->
+  <section id="contact" class="section">
+    <h2>预约免费设计</h2>
+    <p style="margin-bottom:1.2rem;">拨打 400-123-5678 或扫码添加微信，12小时内响应</p>
+    <!-- 微信二维码：换成你自己的 -->
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=skk2025" alt="微信二维码">
+  </section>
+
+  <!-- 页脚 -->
+  <footer>
+    <h3>三棵树全屋定制</h3>
+    <p>全国服务热线：400-123-5678 | 邮箱：service@skk.com.cn</p>
+    <p>© 2025 三棵树股份有限公司 版权所有</p>
+  </footer>
 </body>
 </html>
