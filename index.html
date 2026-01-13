@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>NetApp 存储巡检报告生成器</title>
+  <title>统一巡检平台</title>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
   <style>
@@ -10,96 +10,197 @@
       --theme:#2f7bff;
       --theme-dark:#1b5fd8;
       --bg:#f5f7fa;
+      --menu:#fff;
       --card:#fff;
       --radius:8px;
       --text:#333;
     }
     *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;}
-    body{background:var(--bg);color:var(--text);padding-bottom:60px}
-    /* 顶部 */
-    header{
-      position:sticky;top:0;z-index:9;
-      background:var(--theme);color:#fff;
-      display:flex;align-items:center;justify-content:center;
-      padding:.8rem;font-size:1.1rem;font-weight:500;
+    body{background:var(--bg);color:var(--text);display:flex;height:100vh;}
+    /* 左侧菜单 */
+    .sidebar{
+      width:220px;background:var(--menu);box-shadow:2px 0 6px rgba(0,0,0,.05);
+      display:flex;flex-direction:column;
     }
+    .sidebar h2{
+      padding:1rem;font-size:1.1rem;font-weight:500;border-bottom:1px solid #e5e5e5;
+    }
+    .menu-item{
+      padding:.8rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
+      transition:.2s;
+    }
+    .menu-item:hover{background:#f3f5f7;}
+    .menu-item.active{color:var(--theme);}
+    .submenu{
+      max-height:0;overflow:hidden;transition:max-height .3s;
+      background:#fafbfc;
+    }
+    .submenu.open{max-height:300px;}
+    .submenu div{
+      padding:.6rem .6rem .6rem 2.4rem;font-size:.9rem;cursor:pointer;
+    }
+    .submenu div:hover{background:#eef0f3;}
+    .submenu div.active{color:var(--theme);}
+
+    /* 右侧主内容 */
+    .main{flex:1;display:flex;flex-direction:column;padding:1rem;overflow-y:auto;}
+    .content-row{display:flex;gap:1rem;flex-wrap:wrap;}
+    .panel{flex:1;min-width:280px;background:var(--card);border-radius:var(--radius);box-shadow:0 2px 6px rgba(0,0,0,.05);padding:1rem;}
+    .panel h3{margin-bottom:.8rem;font-size:1rem;font-weight:500;}
     /* 上传区 */
     .upload-area{
-      margin:.8rem;padding:2rem 1rem;
-      background:var(--card);border-radius:var(--radius);
-      text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.05);
-      border:2px dashed #ccd4e0;transition:.2s;
+      border:2px dashed #ccd4e0;border-radius:var(--radius);padding:2rem 1rem;text-align:center;transition:.2s;
     }
     .upload-area.dragover{border-color:var(--theme);background:#f0f5ff;}
     .upload-area i{font-size:2.4rem;color:var(--theme);}
-    .upload-area p{margin:.4rem 0;font-size:.95rem;color:#666;}
+    .upload-area p{margin:.4rem 0;font-size:.9rem;color:#666;}
     #fileInput{display:none;}
     .btn{
       display:inline-block;padding:.5rem 1.2rem;background:var(--theme);color:#fff;border-radius:var(--radius);
-      font-size:.9rem;border:0;outline:0;cursor:pointer;
+      font-size:.9rem;border:0;outline:0;cursor:pointer;margin-top:.6rem;
     }
     .btn:active{background:var(--theme-dark);}
+    /* 摘要区 */
+    #summary{display:none;}
+    .summary-item{display:flex;justify-content:space-between;padding:.4rem 0;font-size:.9rem;border-bottom:1px solid #f0f0f0;}
+    .summary-item:last-child{border:0;}
+    .summary-item .label{color:#666;}
+    .summary-item .val{font-weight:500;}
+    .health-good{color:#2db84d;}
+    .health-bad{color:#f53f3f;}
+    /* 问题列表 */
+    #issues{margin-top:1rem;font-size:.9rem;}
+    #issues ul{padding-left:1.2rem;margin-top:.4rem;}
     /* 进度条 */
-    .progress{display:none;margin-top:1rem;height:6px;background:#e5e5e5;border-radius:3px;overflow:hidden;}
+    .progress{display:none;height:6px;background:#e5e5e5;border-radius:3px;overflow:hidden;margin-top:.8rem;}
     .progress-bar{height:100%;background:var(--theme);width:0%;transition:width .3s;}
-    /* 结果区 */
-    .result{display:none;margin:.8rem;padding:1rem;background:var(--card);border-radius:var(--radius);box-shadow:0 2px 6px rgba(0,0,0,.05);}
-    .result h3{margin-bottom:.4rem;font-size:1rem;}
-    .result p{font-size:.85rem;color:#666;margin-bottom:.6rem;}
-    /* 底部提示 */
-    .footer-tip{text-align:center;font-size:.8rem;color:#999;padding:1rem;}
+    /* 响应式 */
+    @media(max-width:768px){
+      .sidebar{display:none;} /* 可扩展为汉堡菜单 */
+      .content-row{flex-direction:column;}
+    }
   </style>
 </head>
 <body>
-  <header><i class="ri-file-list-3-line"></i>&nbsp;NetApp 巡检报告生成</header>
-
-  <!-- 上传区 -->
-  <div class="upload-area" id="uploadArea">
-    <i class="ri-upload-cloud-2-line"></i>
-    <p>拖拽日志文件到此处<br>或点击选择文件</p>
-    <button class="btn" onclick="document.getElementById('fileInput').click()">选择文件</button>
-    <input type="file" id="fileInput" accept=".log,.txt,.gz">
-    <div class="progress" id="progressBar">
-      <div class="progress-bar" id="progressFill"></div>
+  <!-- 左侧菜单 -->
+  <aside class="sidebar">
+    <h2>巡检菜单</h2>
+    <!-- NetApp 存储 -->
+    <div class="menu-item" onclick="toggleMenu(this)">
+      <span><i class="ri-server-line"></i> NetApp 存储</span>
+      <i class="ri-arrow-down-s-line arrow"></i>
     </div>
-  </div>
+    <div class="submenu">
+      <div onclick="selectDevice('NetApp','FAS8200')" class="active">FAS8200</div>
+      <div onclick="selectDevice('NetApp','AFF-A400')">AFF-A400</div>
+      <div onclick="selectDevice('NetApp','FSxN')">FSxN</div>
+    </div>
+    <!-- MDS 光交 -->
+    <div class="menu-item" onclick="toggleMenu(this)">
+      <span><i class="ri-exchange-line"></i> MDS 光交</span>
+      <i class="ri-arrow-down-s-line arrow"></i>
+    </div>
+    <div class="submenu">
+      <div onclick="selectDevice('MDS','MDS 9148S')">MDS 9148S</div>
+      <div onclick="selectDevice('MDS','MDS 9396S')">MDS 9396S</div>
+    </div>
+    <!-- 更多设备可复制 -->
+  </aside>
 
-  <!-- 结果区 -->
-  <div class="result" id="resultBox">
-    <h3><i class="ri-checkbox-circle-line" style="color:#2f7bff"></i> 生成成功</h3>
-    <p id="resultText"></p>
-    <a class="btn" id="downloadBtn" href="#" download="NetApp巡检报告.pdf">下载 PDF</a>
-  </div>
+  <!-- 右侧主内容 -->
+  <main class="main">
+    <div class="content-row">
+      <!-- 左栏：上传 -->
+      <div class="panel">
+        <h3><i class="ri-upload-cloud-2-line"></i> 上传日志文件</h3>
+        <div class="upload-area" id="uploadArea">
+          <i class="ri-file-add-line"></i>
+          <p>拖拽文件到此处 或点击选择</p>
+          <button class="btn" onclick="document.getElementById('fileInput').click()">选择文件</button>
+          <input type="file" id="fileInput" accept=".log,.txt,.gz">
+          <div class="progress" id="progressBar"><div class="progress-bar" id="progressFill"></div></div>
+        </div>
+      </div>
 
-  <!-- 页脚提示 -->
-  <div class="footer-tip">支持 .log / .txt / .gz 格式，文件最大 20 MB</div>
+      <!-- 右栏：巡检摘要 -->
+      <div class="panel">
+        <h3><i class="ri-file-list-3-line"></i> 巡检摘要</h3>
+        <div id="summary">
+          <div class="summary-item">
+            <span class="label">设备型号</span>
+            <span class="val" id="devModel">-</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">巡检结果</span>
+            <span class="val" id="devResult">-</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">健康度</span>
+            <span class="val" id="devHealth">-</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">巡检时间</span>
+            <span class="val" id="devTime">-</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">报告下载</span>
+            <span class="val"><a id="pdfLink" href="#" download="report.pdf">点击下载</a></span>
+          </div>
+
+          <div id="issues">
+            <b>发现问题（<span id="issueCount">0</span>）：</b>
+            <ul id="issueList"></ul>
+          </div>
+        </div>
+
+        <!-- 空态 -->
+        <div id="emptySummary" style="text-align:center;color:#999;font-size:.9rem;padding:2rem 0;">
+          <i class="ri-inbox-line" style="font-size:2rem;"></i>
+          <p>请先上传日志文件</p>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <script>
+    let currentType = 'NetApp';
+    let currentModel = 'FAS8200';
+
+    /* 左侧菜单折叠 */
+    function toggleMenu(el){
+      el.classList.toggle('open');
+      el.nextElementSibling.classList.toggle('open');
+    }
+
+    /* 选择具体设备 */
+    function selectDevice(type, model){
+      currentType = type;
+      currentModel = model;
+      document.querySelectorAll('.submenu div').forEach(div=>div.classList.remove('active'));
+      event.target.classList.add('active');
+      resetSummary();          // 切换设备后重置摘要
+    }
+
+    /* 上传相关 */
     const uploadArea = document.getElementById('uploadArea');
     const fileInput  = document.getElementById('fileInput');
     const progressBar= document.getElementById('progressBar');
     const progressFill=document.getElementById('progressFill');
-    const resultBox  = document.getElementById('resultBox');
-    const resultText = document.getElementById('resultText');
-    const downloadBtn= document.getElementById('downloadBtn');
 
-    /* 拖拽上传 */
     uploadArea.addEventListener('dragover', e=>{e.preventDefault();uploadArea.classList.add('dragover');});
     uploadArea.addEventListener('dragleave', ()=>uploadArea.classList.remove('dragover'));
     uploadArea.addEventListener('drop', e=>{
       e.preventDefault();
       uploadArea.classList.remove('dragover');
-      const files = e.dataTransfer.files;
-      if(files.length) handleFile(files[0]);
+      if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
     });
     fileInput.addEventListener('change', e=>handleFile(e.target.files[0]));
 
-    /* 统一处理文件 */
     function handleFile(file){
       if(!file) return;
-      const allow = ['text/plain','application/octet-stream','application/gzip','text/x-log'];
-      if(!allow.includes(file.type) && !/\.(log|txt|gz)$/i.test(file.name)){
-        alert('请上传 .log / .txt / .gz 格式');
+      const allowExt = /\.(log|txt|gz)$/i;
+      if(!allowExt.test(file.name)){
+        alert('仅支持 .log / .txt / .gz 文件');
         return;
       }
       if(file.size > 20*1024*1024){ alert('文件大小不能超过 20 MB'); return; }
@@ -107,39 +208,57 @@
       uploadFile(file);
     }
 
-    /* 上传 & 进度 */
     function uploadFile(file){
       const xhr = new XMLHttpRequest();
-      const form = new FormData();
-      form.append('log', file);
+      const fd  = new FormData();
+      fd.append('log', file);
+      fd.append('type', currentType);
+      fd.append('model', currentModel);
 
-      xhr.open('POST', 'https://你的后端地址/api/netapp-report'); // ← 改成真实接口
+      xhr.open('POST','https://你的后端地址/api/netapp-report'); // ← 改真实接口
       xhr.upload.onprogress = e=>{
         if(e.lengthComputable){
           const pct = Math.round(e.loaded/e.total*100);
-          progressFill.style.width = pct + '%';
+          progressFill.style.width = pct+'%';
         }
       };
       xhr.onload = ()=>{
         progressBar.style.display = 'none';
-        if(xhr.status === 200){
+        if(xhr.status===200){
           const res = JSON.parse(xhr.responseText);
-          showResult(res);
+          fillSummary(res);
         }else{
           alert('生成失败：'+xhr.responseText);
         }
       };
-      xhr.onerror = ()=>{ progressBar.style.display = 'none'; alert('网络错误，请重试'); };
+      xhr.onerror = ()=>{ progressBar.style.display='none'; alert('网络错误，请重试'); };
       progressBar.style.display = 'block';
-      progressFill.style.width = '0%';
-      xhr.send(form);
+      progressFill.style.width  = '0%';
+      xhr.send(fd);
     }
 
-    /* 展示结果 */
-    function showResult(res){
-      resultText.textContent = `文件：${res.filename}，生成时间：${res.time}，页数：${res.pages}`;
-      downloadBtn.href = res.pdf_url; // 后端返回的 pdf 直链
-      resultBox.style.display = 'block';
+    /* 填充摘要 */
+    function fillSummary(r){
+      document.getElementById('emptySummary').style.display='none';
+      document.getElementById('summary').style.display='block';
+
+      document.getElementById('devModel').textContent  = r.model;
+      document.getElementById('devResult').textContent = r.result;        // 如 正常 / 异常
+      document.getElementById('devHealth').textContent = r.health+'%';   // 健康度
+      document.getElementById('devHealth').className   = r.health>=80?'val health-good':'val health-bad';
+      document.getElementById('devTime').textContent   = r.time;
+      document.getElementById('pdfLink').href          = r.pdf_url;
+
+      const issues = r.issues || [];
+      document.getElementById('issueCount').textContent = issues.length;
+      const ul = document.getElementById('issueList');
+      ul.innerHTML = issues.map(i=>`<li>${i}</li>`).join('');
+      if(!issues.length) ul.innerHTML = '<li style="color:#2db84d">本次巡检未发现问题</li>';
+    }
+
+    function resetSummary(){
+      document.getElementById('emptySummary').style.display='block';
+      document.getElementById('summary').style.display='none';
     }
   </script>
 </body>
