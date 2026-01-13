@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>巡检报告生成器</title>
+  <title>NetApp 存储巡检报告生成器</title>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
   <style>
@@ -10,150 +10,136 @@
       --theme:#2f7bff;
       --theme-dark:#1b5fd8;
       --bg:#f5f7fa;
-      --text:#333;
       --card:#fff;
       --radius:8px;
+      --text:#333;
     }
     *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;}
     body{background:var(--bg);color:var(--text);padding-bottom:60px}
-    /* 顶部栏 */
+    /* 顶部 */
     header{
       position:sticky;top:0;z-index:9;
       background:var(--theme);color:#fff;
-      display:flex;align-items:center;justify-content:space-between;
-      padding:.6rem .8rem;font-size:1.1rem;font-weight:500;
+      display:flex;align-items:center;justify-content:center;
+      padding:.8rem;font-size:1.1rem;font-weight:500;
     }
-    header i{font-size:1.2rem;}
-    /* 搜索 */
-    .search-box{
-      margin:.8rem;
-      position:relative;
-    }
-    .search-box input{
-      width:100%;padding:.6rem 2.2rem .6rem .8rem;
-      border:0;border-radius:var(--radius);
-      font-size:.95rem;
-    }
-    .search-box i{
-      position:absolute;right:.6rem;top:50%;transform:translateY(-50%);
-      color:#999;
-    }
-    /* 卡片列表 */
-    .list{
-      padding:0 .8rem;
-    }
-    .card{
+    /* 上传区 */
+    .upload-area{
+      margin:.8rem;padding:2rem 1rem;
       background:var(--card);border-radius:var(--radius);
-      padding:1rem;margin-bottom:.8rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.05);
-      display:flex;align-items:center;
+      text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.05);
+      border:2px dashed #ccd4e0;transition:.2s;
     }
-    .card-icon{
-      width:48px;height:48px;border-radius:50%;
-      background:var(--bg);display:flex;align-items:center;justify-content:center;
-      margin-right:.8rem;font-size:1.4rem;color:var(--theme);
-    }
-    .card-info{flex:1}
-    .card-info h3{font-size:1rem;font-weight:500;margin-bottom:.2rem;}
-    .card-info p{font-size:.85rem;color:#666;}
-    .card-arrow{color:#ccc;}
-    /* 底部固定按钮 */
-    .bottom-bar{
-      position:fixed;bottom:0;left:0;right:0;
-      background:#fff;border-top:1px solid #e5e5e5;
-      display:flex;padding:.6rem .8rem;
-    }
+    .upload-area.dragover{border-color:var(--theme);background:#f0f5ff;}
+    .upload-area i{font-size:2.4rem;color:var(--theme);}
+    .upload-area p{margin:.4rem 0;font-size:.95rem;color:#666;}
+    #fileInput{display:none;}
     .btn{
-      flex:1;text-align:center;padding:.5rem;
-      background:var(--theme);color:#fff;border-radius:var(--radius);
-      font-size:.95rem;font-weight:500;
-      border:0;outline:0;cursor:pointer;
+      display:inline-block;padding:.5rem 1.2rem;background:var(--theme);color:#fff;border-radius:var(--radius);
+      font-size:.9rem;border:0;outline:0;cursor:pointer;
     }
     .btn:active{background:var(--theme-dark);}
-    /* 空态 */
-    .empty{text-align:center;padding:3rem 1rem;color:#999;font-size:.9rem;}
-    .empty i{font-size:3rem;margin-bottom:.6rem;color:#ddd;}
+    /* 进度条 */
+    .progress{display:none;margin-top:1rem;height:6px;background:#e5e5e5;border-radius:3px;overflow:hidden;}
+    .progress-bar{height:100%;background:var(--theme);width:0%;transition:width .3s;}
+    /* 结果区 */
+    .result{display:none;margin:.8rem;padding:1rem;background:var(--card);border-radius:var(--radius);box-shadow:0 2px 6px rgba(0,0,0,.05);}
+    .result h3{margin-bottom:.4rem;font-size:1rem;}
+    .result p{font-size:.85rem;color:#666;margin-bottom:.6rem;}
+    /* 底部提示 */
+    .footer-tip{text-align:center;font-size:.8rem;color:#999;padding:1rem;}
   </style>
 </head>
 <body>
-  <!-- 顶部 -->
-  <header>
-    <span>巡检报告生成器</span>
-    <i class="ri-file-list-3-line"></i>
-  </header>
+  <header><i class="ri-file-list-3-line"></i>&nbsp;NetApp 巡检报告生成</header>
 
-  <!-- 搜索 -->
-  <div class="search-box">
-    <input id="searchInput" placeholder="搜索设备编号/名称">
-    <i class="ri-search-line"></i>
+  <!-- 上传区 -->
+  <div class="upload-area" id="uploadArea">
+    <i class="ri-upload-cloud-2-line"></i>
+    <p>拖拽日志文件到此处<br>或点击选择文件</p>
+    <button class="btn" onclick="document.getElementById('fileInput').click()">选择文件</button>
+    <input type="file" id="fileInput" accept=".log,.txt,.gz">
+    <div class="progress" id="progressBar">
+      <div class="progress-bar" id="progressFill"></div>
+    </div>
   </div>
 
-  <!-- 列表 -->
-  <div id="list" class="list">
-    <!-- JS 动态插入卡片 -->
+  <!-- 结果区 -->
+  <div class="result" id="resultBox">
+    <h3><i class="ri-checkbox-circle-line" style="color:#2f7bff"></i> 生成成功</h3>
+    <p id="resultText"></p>
+    <a class="btn" id="downloadBtn" href="#" download="NetApp巡检报告.pdf">下载 PDF</a>
   </div>
 
-  <!-- 底部按钮 -->
-  <div class="bottom-bar">
-    <button class="btn" onclick="generateAll()">生成全部报告</button>
-  </div>
+  <!-- 页脚提示 -->
+  <div class="footer-tip">支持 .log / .txt / .gz 格式，文件最大 20 MB</div>
 
   <script>
-    /* ====== 1. 模拟数据，可删除 ====== */
-    const mockData = [
-      {id:1,name:'冷却泵-01',code:'PUMP-01',status:1,last:'2025-06-20'},
-      {id:2,name:'冷却泵-02',code:'PUMP-02',status:0,last:'2025-06-19'},
-      {id:3,name:'空调主机-01',code:'AC-01',status:1,last:'2025-06-21'},
-      {id:4,name:'空调主机-02',code:'AC-02',status:1,last:'2025-06-21'}
-    ];
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput  = document.getElementById('fileInput');
+    const progressBar= document.getElementById('progressBar');
+    const progressFill=document.getElementById('progressFill');
+    const resultBox  = document.getElementById('resultBox');
+    const resultText = document.getElementById('resultText');
+    const downloadBtn= document.getElementById('downloadBtn');
 
-    /* ====== 2. 页面加载时渲染 ====== */
-    window.onload = () => renderList(mockData);
+    /* 拖拽上传 */
+    uploadArea.addEventListener('dragover', e=>{e.preventDefault();uploadArea.classList.add('dragover');});
+    uploadArea.addEventListener('dragleave', ()=>uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', e=>{
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if(files.length) handleFile(files[0]);
+    });
+    fileInput.addEventListener('change', e=>handleFile(e.target.files[0]));
 
-    /* ====== 3. 搜索实时过滤 ====== */
-    searchInput.oninput = e => {
-      const kw = e.target.value.trim().toLowerCase();
-      const filtered = mockData.filter(item =>
-        item.name.toLowerCase().includes(kw) || item.code.toLowerCase().includes(kw)
-      );
-      renderList(filtered);
-    };
+    /* 统一处理文件 */
+    function handleFile(file){
+      if(!file) return;
+      const allow = ['text/plain','application/octet-stream','application/gzip','text/x-log'];
+      if(!allow.includes(file.type) && !/\.(log|txt|gz)$/i.test(file.name)){
+        alert('请上传 .log / .txt / .gz 格式');
+        return;
+      }
+      if(file.size > 20*1024*1024){ alert('文件大小不能超过 20 MB'); return; }
 
-    /* ====== 4. 渲染卡片 ====== */
-    function renderList(arr){
-      const list = document.getElementById('list');
-      if(!arr.length){ list.innerHTML = '<div class="empty"><i class="ri-inbox-line"></i><p>暂无数据</p></div>'; return;}
-      list.innerHTML = arr.map(item=>`
-        <div class="card" onclick="generateOne('${item.code}')">
-          <div class="card-icon">
-            <i class="${item.status?'ri-check-line':'ri-error-warning-line'}"></i>
-          </div>
-          <div class="card-info">
-            <h3>${item.name} <small>(${item.code})</small></h3>
-            <p>最近巡检：${item.last} · 状态：${item.status?'正常':'异常'}</p>
-          </div>
-          <i class="ri-arrow-right-s-line card-arrow"></i>
-        </div>
-      `).join('');
+      uploadFile(file);
     }
 
-    /* ====== 5. 单设备报告 ====== */
-    function generateOne(code){
-      // TODO: 换成真实接口
-      // fetch(`/api/report/${code}`).then(r=>r.blob()).then(showPdf)
-      alert(`已调用后端接口生成 ${code} 报告\n（此处可替换为 blob→PDF）`);
+    /* 上传 & 进度 */
+    function uploadFile(file){
+      const xhr = new XMLHttpRequest();
+      const form = new FormData();
+      form.append('log', file);
+
+      xhr.open('POST', 'https://你的后端地址/api/netapp-report'); // ← 改成真实接口
+      xhr.upload.onprogress = e=>{
+        if(e.lengthComputable){
+          const pct = Math.round(e.loaded/e.total*100);
+          progressFill.style.width = pct + '%';
+        }
+      };
+      xhr.onload = ()=>{
+        progressBar.style.display = 'none';
+        if(xhr.status === 200){
+          const res = JSON.parse(xhr.responseText);
+          showResult(res);
+        }else{
+          alert('生成失败：'+xhr.responseText);
+        }
+      };
+      xhr.onerror = ()=>{ progressBar.style.display = 'none'; alert('网络错误，请重试'); };
+      progressBar.style.display = 'block';
+      progressFill.style.width = '0%';
+      xhr.send(form);
     }
 
-    /* ====== 6. 批量报告 ====== */
-    function generateAll(){
-      // TODO: 后端支持批量时调用
-      alert('已请求批量生成，全部报告将打包为 ZIP 下载');
-    }
-
-    /* ====== 7. 展示 PDF（示例）====== */
-    function showPdf(blob){
-      const url = URL.createObjectURL(blob);
-      window.open(url);
+    /* 展示结果 */
+    function showResult(res){
+      resultText.textContent = `文件：${res.filename}，生成时间：${res.time}，页数：${res.pages}`;
+      downloadBtn.href = res.pdf_url; // 后端返回的 pdf 直链
+      resultBox.style.display = 'block';
     }
   </script>
 </body>
